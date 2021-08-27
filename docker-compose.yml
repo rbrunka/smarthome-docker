@@ -1,0 +1,79 @@
+version: '2'
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  iobrokerdata:
+  fhemdata:
+  influxdb:
+  grafana:
+
+services:
+  iobroker:
+    restart: always
+    image: buanet/iobroker:latest
+    container_name: iobroker
+    hostname: iobroker
+    ports:
+      - "8081:8081"
+    volumes:
+      - iobrokerdata:/opt/iobroker
+    depends_on:
+      - influxdb
+      - fhem
+      - knxd
+
+  fhem:
+    restart: always
+    image: fhem/fhem:latest
+    container_name: fhem
+    hostname: fhem
+    ports:
+      - "8083:8083"
+    volumes:
+      - fhemdata:/opt/fhem
+
+  influxdb:
+    restart: always
+    image: influxdb:1.8
+    container_name: influxdb
+    hostname: influxdb
+    volumes:
+      - influxdb:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=iobroker
+      - DOCKER_INFLUXDB_INIT_PASSWORD=iobroker
+      - DOCKER_INFLUXDB_INIT_ORG=brunka.net
+      - DOCKER_INFLUXDB_INIT_BUCKET=iobroker
+        
+  grafana:
+    restart: always
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana:/var/lib/grafana
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_USERNAME=iobroker
+      - INFLUXDB_PASSWORD=iobroker
+
+  knxd:
+    restart: always
+    build:
+      context: ./knxd
+      dockerfile: Dockerfile
+    container_name: knxd
+    hostname: knxd
+    ports:
+      - "3671:3671"
+    devices:
+      - "/dev/ttyAMA0:/dev/ttyAMA0"
+

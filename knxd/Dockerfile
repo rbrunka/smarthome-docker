@@ -10,6 +10,7 @@ COPY entrypoint.sh /
 
 RUN chmod 755 /entrypoint.sh
 
-EXPOSE 3671
+EXPOSE 3671/udp
+EXPOSE 6720
 
 ENTRYPOINT ["/entrypoint.sh"]

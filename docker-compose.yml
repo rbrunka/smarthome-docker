@@ -74,6 +74,7 @@ services:
     hostname: knxd
     ports:
       - "3671:3671"
+      - "6720:6720"
     devices:
       - "/dev/ttyAMA0:/dev/ttyAMA0"
-
+    network_mode: "host"
